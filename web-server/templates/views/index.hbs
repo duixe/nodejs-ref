@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    {{>header}}
+    <h4>get all weather information here</h4>
+    <form class="form">
+        <input class="form-input" type="text" placeholder="Enter Location here">
+        <button class="form-btn">Search</button>
+    </form>
+    <br>
+    <hr style="width: 40%; margin: 0 auto;">
+    <p class="info-1" style="font-size: 1rem; color: grey; margin: 1rem auto"></p>
+    <p class="info-2" style="font-size: 1rem; color: grey; margin: 0 auto"></p>
+
+    {{>footer}}
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
