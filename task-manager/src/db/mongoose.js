@@ -45,3 +45,26 @@ task1.save().then((task) => {
 }).catch((err) => {
     console.log("error!", err);
 })
+
+
+
+// the documented way of creating schemas and inserting in a model\
+// var mongoose = require('mongoose');
+//   var Schema = mongoose.Schema;
+
+//   var blogSchema = new Schema({
+//     title:  String, // String is shorthand for {type: String}
+//     author: String,
+//     body:   String,
+//     comments: [{ body: String, date: Date }],
+//     date: { type: Date, default: Date.now },
+//     hidden: Boolean,
+//     meta: {
+//       votes: Number,
+//       favs:  Number
+//     }
+//   });
+
+
+// //  to use the schema defination created above we need to convert it to a model we can work with
+// var Blog = mongoose.model('Blog', blogSchema); 
