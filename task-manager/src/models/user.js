@@ -48,7 +48,10 @@ const userSchema = new mongoose.Schema({
             type: String,
             required: true,
         }
-    }]
+    }],
+    avatar: {
+        type: Buffer
+    }
 }, {
     timestamps: true
 })
@@ -64,6 +67,7 @@ userSchema.methods.toJSON = function() {
 
     delete userObject.password
     delete userObject.tokens
+    delete userObject.avatar
 
     return userObject
 }
@@ -72,7 +76,7 @@ userSchema.methods.toJSON = function() {
 userSchema.methods.generateAuthToken = async function() {
    
     // the toString() method is used to convert the _id which is an objectId to a string
-    const token = jwt.sign({ _id: this._id.toString() }, 'sessioninnode')
+    const token = jwt.sign({ _id: this._id.toString() }, process.env.JWT_SECRET)
 
     this.tokens = this.tokens.concat({ token })
     await this.save()

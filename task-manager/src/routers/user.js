@@ -1,20 +1,49 @@
-const express = require('express')
-const User = require('../models/user')
-const auth = require('../middleware/auth')
+const express = require('express');
+const  multer = require('multer');
+const sharp = require('sharp');
+const User = require('../models/user');
+const auth = require('../middleware/auth');
+const { sendWelcomeMail, sendCancelationEmail } = require('../emails/account');
 
 const router = new express.Router()
+
 
 router.post('/users', async (req, res) => {
     const user = new User(req.body)
 
     try {
-        await user.save()  
-        const token =  await user.generateAuthToken()
-        res.status(201).send({ user, token })
+        await user.save()
+        sendWelcomeMail(user.email, user.name);
+        const token =  await user.generateAuthToken();
+        res.status(201).send({ user, token });
     } catch (err) {
-        res.status(400).send(err)
+        res.status(400).send(err);
     }
 
+})
+
+// profile pic - avatar
+const upload = multer({
+    // dest: 'avatars',
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            cb(new Error('please upload only jpeg, jpg and png file format'))
+        }
+
+        cb(undefined, true)
+    }
+})
+// This 👇 route can be used to create avatar at the same time updating it
+router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+    const resizedBufferImg = await sharp(req.file.buffer).resize({ width: 250, height: 250 }).png().toBuffer()
+    req.user.avatar = resizedBufferImg 
+    await req.user.save()
+    res.send()
+}, (err, req, res, next) => {
+    res.status(400).send({ error: err.message })
 })
 
 router.post('/users/login', async (req, res) => {
@@ -75,6 +104,23 @@ router.get('/users/me', auth, async (req, res) => {
 
 })
 
+router.get('/users/:id/avatar', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+
+        if (!user || !user.avatar) {
+            // throw this 👇 error also allows the program to jump out of the if stmt and straight into the catch block
+            throw new Error()
+        }
+
+        // setting response headers - we use res.set()
+        res.set('Content-Type', 'image/png')
+        res.send(user.avatar)
+    } catch (err) {
+        res.status(404).send()
+    }
+})
+
 
 router.patch('/users/me', auth, async (req, res) => {
     const updateParams = Object.keys(req.body)
@@ -96,6 +142,12 @@ router.patch('/users/me', auth, async (req, res) => {
     }
 })
 
+router.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined
+    await req.user.save()
+    res.send()
+})
+
 router.delete('/users/me', auth, async (req, res) => {
     try {
     //    const user = await User.findByIdAndDelete(req.user._id)
@@ -104,13 +156,17 @@ router.delete('/users/me', auth, async (req, res) => {
     //        return res.status(404).send()
     //    }
 
-       await req.user.remove()
-
-       res.send(req.user)
+       await req.user.remove();
+       sendCancelationEmail(req.user.email, req.user.name);
+       res.send(req.user);
     } catch (err) {
         res.status(500).send(err)
     }
 })
+
+
+
+
 
 
 module.exports = router
